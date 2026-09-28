@@ -1,0 +1,53 @@
+# Python Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Node & Frontend dependencies & build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Databases & local runtime data
+*.db
+*.db.bak
+*.sqlite
+*.sqlite3
+strokecare.db
+strokecare.db.bak
+backend/strokecare.db
+
+# User uploads, generated reports, & scan test images (keep directory)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Environment variables & secrets
+.env
+.env*.local
+.env.production
+.env.development
+
+# IDE & OS artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp

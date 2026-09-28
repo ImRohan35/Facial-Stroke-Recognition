@@ -1,0 +1,215 @@
+{
+  "dataset_info": {
+    "source_type": "Kaggle Real Annotated Dataset",
+    "dataset_name": "Annotated Facial Images for Stroke Classification",
+    "author": "Abdussalam Elhanashy",
+    "total_samples": 3715,
+    "stroke_samples": 1244,
+    "non_stroke_samples": 2471,
+    "stroke_percentage": 33.49,
+    "metadata": {
+      "dataset_name": "Annotated Facial Images for Stroke Classification",
+      "dataset_source": "Kaggle (abdussalamelhanashy/annotated-facial-images-for-stroke-classification)",
+      "total_source_images": 3749,
+      "total_valid_landmarked_images": 3715,
+      "skipped_images_no_landmark": 34,
+      "landmark_detection_rate": 99.09,
+      "class_breakdown": {
+        "stroke_count": 1244,
+        "non_stroke_count": 2471
+      },
+      "clinical_averages": {
+        "stroke": {
+          "mean_facial_symmetry_score": 70.87,
+          "mean_mouth_symmetry_score": 67.21,
+          "mean_mouth_corner_asymmetry": 0.1726,
+          "mean_lower_face_asymmetry": 0.2883
+        },
+        "non_stroke": {
+          "mean_facial_symmetry_score": 64.51,
+          "mean_mouth_symmetry_score": 61.2,
+          "mean_mouth_corner_asymmetry": 0.207,
+          "mean_lower_face_asymmetry": 0.4884
+        }
+      },
+      "extracted_at": "2026-09-24 23:53:19"
+    }
+  },
+  "models": {
+    "LogisticRegression": {
+      "model_name": "LogisticRegression",
+      "accuracy": 0.6864,
+      "precision": 0.5209,
+      "recall_sensitivity": 0.7992,
+      "specificity": 0.6296,
+      "f1_score": 0.6307,
+      "roc_auc": 0.7859,
+      "confusion_matrix": {
+        "true_negative": 311,
+        "false_positive": 183,
+        "false_negative": 50,
+        "true_positive": 199
+      },
+      "cross_validation_5fold": {
+        "mean_accuracy": 0.6942,
+        "std_accuracy": 0.0126,
+        "mean_sensitivity": 0.7757,
+        "std_sensitivity": 0.0224,
+        "mean_roc_auc": 0.7926,
+        "std_roc_auc": 0.0062,
+        "mean_f1": 0.6295
+      }
+    },
+    "SVM": {
+      "model_name": "SVM",
+      "accuracy": 0.8385,
+      "precision": 0.7312,
+      "recall_sensitivity": 0.8193,
+      "specificity": 0.8482,
+      "f1_score": 0.7727,
+      "roc_auc": 0.8978,
+      "confusion_matrix": {
+        "true_negative": 419,
+        "false_positive": 75,
+        "false_negative": 45,
+        "true_positive": 204
+      },
+      "cross_validation_5fold": {
+        "mean_accuracy": 0.8328,
+        "std_accuracy": 0.008,
+        "mean_sensitivity": 0.8047,
+        "std_sensitivity": 0.0178,
+        "mean_roc_auc": 0.9021,
+        "std_roc_auc": 0.0074,
+        "mean_f1": 0.7632
+      }
+    },
+    "RandomForest": {
+      "model_name": "RandomForest",
+      "accuracy": 0.8829,
+      "precision": 0.7755,
+      "recall_sensitivity": 0.9157,
+      "specificity": 0.8664,
+      "f1_score": 0.8398,
+      "roc_auc": 0.9431,
+      "confusion_matrix": {
+        "true_negative": 428,
+        "false_positive": 66,
+        "false_negative": 21,
+        "true_positive": 228
+      },
+      "cross_validation_5fold": {
+        "mean_accuracy": 0.8711,
+        "std_accuracy": 0.0088,
+        "mean_sensitivity": 0.8682,
+        "std_sensitivity": 0.0213,
+        "mean_roc_auc": 0.9416,
+        "std_roc_auc": 0.0072,
+        "mean_f1": 0.8185
+      }
+    },
+    "XGBoost": {
+      "model_name": "XGBoost",
+      "accuracy": 0.8802,
+      "precision": 0.7857,
+      "recall_sensitivity": 0.8835,
+      "specificity": 0.8785,
+      "f1_score": 0.8318,
+      "roc_auc": 0.9531,
+      "confusion_matrix": {
+        "true_negative": 434,
+        "false_positive": 60,
+        "false_negative": 29,
+        "true_positive": 220
+      },
+      "cross_validation_5fold": {
+        "mean_accuracy": 0.8848,
+        "std_accuracy": 0.0092,
+        "mean_sensitivity": 0.8682,
+        "std_sensitivity": 0.0148,
+        "mean_roc_auc": 0.9494,
+        "std_roc_auc": 0.0052,
+        "mean_f1": 0.8346
+      }
+    }
+  },
+  "recommended_production_model": "XGBoost",
+  "primary_metric": "Recall / Sensitivity (Minimizing False Negatives in Stroke Screening)",
+  "features": [
+    "mouth_vertical_asymmetry",
+    "mouth_lateral_asymmetry",
+    "mouth_corner_asymmetry",
+    "eye_opening_difference",
+    "eyebrow_elevation_difference",
+    "lower_face_asymmetry",
+    "mean_landmark_displacement",
+    "mouth_symmetry_score",
+    "eye_symmetry_score",
+    "lower_face_symmetry_score"
+  ],
+  "feature_display_names": {
+    "mouth_vertical_asymmetry": "Mouth Corner Elevation Difference",
+    "mouth_lateral_asymmetry": "Mouth Lateral Deviation",
+    "mouth_corner_asymmetry": "Primary Mouth Corner Asymmetry",
+    "eye_opening_difference": "Palpebral Fissure / Ptosis Difference",
+    "eyebrow_elevation_difference": "Frontalis / Eyebrow Arch Elevation",
+    "lower_face_asymmetry": "Lower Face / Mandibular Drift",
+    "mean_landmark_displacement": "Global Bilateral Displacement",
+    "mouth_symmetry_score": "Mouth Symmetry Score (0-100)",
+    "eye_symmetry_score": "Eye Opening Symmetry Score (0-100)",
+    "lower_face_symmetry_score": "Lower Face Symmetry Score (0-100)"
+  },
+  "shap_global_feature_importance": [
+    {
+      "feature_key": "lower_face_asymmetry",
+      "display_name": "Lower Face / Mandibular Drift",
+      "mean_abs_shap": 1.0453
+    },
+    {
+      "feature_key": "mouth_lateral_asymmetry",
+      "display_name": "Mouth Lateral Deviation",
+      "mean_abs_shap": 0.581
+    },
+    {
+      "feature_key": "mouth_vertical_asymmetry",
+      "display_name": "Mouth Corner Elevation Difference",
+      "mean_abs_shap": 0.4132
+    },
+    {
+      "feature_key": "mean_landmark_displacement",
+      "display_name": "Global Bilateral Displacement",
+      "mean_abs_shap": 0.3373
+    },
+    {
+      "feature_key": "eye_opening_difference",
+      "display_name": "Palpebral Fissure / Ptosis Difference",
+      "mean_abs_shap": 0.2897
+    },
+    {
+      "feature_key": "eyebrow_elevation_difference",
+      "display_name": "Frontalis / Eyebrow Arch Elevation",
+      "mean_abs_shap": 0.2775
+    },
+    {
+      "feature_key": "eye_symmetry_score",
+      "display_name": "Eye Opening Symmetry Score (0-100)",
+      "mean_abs_shap": 0.2772
+    },
+    {
+      "feature_key": "mouth_corner_asymmetry",
+      "display_name": "Primary Mouth Corner Asymmetry",
+      "mean_abs_shap": 0.1576
+    },
+    {
+      "feature_key": "lower_face_symmetry_score",
+      "display_name": "Lower Face Symmetry Score (0-100)",
+      "mean_abs_shap": 0.1093
+    },
+    {
+      "feature_key": "mouth_symmetry_score",
+      "display_name": "Mouth Symmetry Score (0-100)",
+      "mean_abs_shap": 0.0796
+    }
+  ],
+  "trained_at": "2026-09-24 23:54:54"
+}

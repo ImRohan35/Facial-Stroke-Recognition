@@ -1,0 +1,27 @@
+{
+  "dataset_name": "Annotated Facial Images for Stroke Classification",
+  "dataset_source": "Kaggle (abdussalamelhanashy/annotated-facial-images-for-stroke-classification)",
+  "total_source_images": 3749,
+  "total_valid_landmarked_images": 3715,
+  "skipped_images_no_landmark": 34,
+  "landmark_detection_rate": 99.09,
+  "class_breakdown": {
+    "stroke_count": 1244,
+    "non_stroke_count": 2471
+  },
+  "clinical_averages": {
+    "stroke": {
+      "mean_facial_symmetry_score": 70.87,
+      "mean_mouth_symmetry_score": 67.21,
+      "mean_mouth_corner_asymmetry": 0.1726,
+      "mean_lower_face_asymmetry": 0.2883
+    },
+    "non_stroke": {
+      "mean_facial_symmetry_score": 64.51,
+      "mean_mouth_symmetry_score": 61.2,
+      "mean_mouth_corner_asymmetry": 0.207,
+      "mean_lower_face_asymmetry": 0.4884
+    }
+  },
+  "extracted_at": "2026-09-24 23:53:19"
+}
