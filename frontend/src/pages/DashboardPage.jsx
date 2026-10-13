@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Activity, Camera, Upload, Video, History, GitCompare, FileText,
   CheckCircle2, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle,
-  Eye, Smile, Compass, ChevronRight, RefreshCw, HeartPulse
+  Eye, Smile, Compass, ChevronRight, RefreshCw
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend
@@ -75,13 +75,6 @@ export const DashboardPage = ({ setTab, setSelectedAssessmentId, setLatestScreen
 
         {/* Quick Screening Launch */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setTab('risk')}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all flex items-center space-x-1.5 cursor-pointer"
-          >
-            <HeartPulse className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>Risk Profiler (BP)</span>
-          </button>
           <button
             onClick={() => setTab('screening')}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all flex items-center space-x-2 cursor-pointer"

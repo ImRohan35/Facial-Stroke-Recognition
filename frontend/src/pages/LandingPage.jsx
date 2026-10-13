@@ -73,8 +73,8 @@ export const LandingPage = ({ setTab }) => {
     },
     {
       icon: <FileText className="w-5 h-5 text-rose-600" />,
-      title: 'Doctor Reports',
-      desc: 'One-click clinical PDF report generation with ReportLab for collaborative physician review.'
+      title: 'Clinical PDF Reports',
+      desc: 'One-click clinical PDF report generation with ReportLab for medical consultation and archiving.'
     }
   ];
 

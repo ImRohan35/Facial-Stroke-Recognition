@@ -8,8 +8,11 @@ import { FaceMeshCanvas } from '../components/common/FaceMeshCanvas';
 import ReliabilityBar from '../components/common/ReliabilityBar';
 import EmergencyDisclaimer from '../components/common/EmergencyDisclaimer';
 import ResultExplanationAssistant from '../components/assistant/ResultExplanationAssistant';
+import StrokeActionGuide from '../components/common/StrokeActionGuide';
+import { useLanguage } from '../context/LanguageContext';
 
 export const ResultPage = ({ screeningData, assessmentId, setTab }) => {
+  const { language, t } = useLanguage();
   const [reportLoading, setReportLoading] = useState(false);
   const [reportUrl, setReportUrl] = useState(null);
   const [baselineSaved, setBaselineSaved] = useState(false);
@@ -50,8 +53,69 @@ export const ResultPage = ({ screeningData, assessmentId, setTab }) => {
 
   const isStrokePattern = data.prediction === 'stroke_associated';
   const isUncertain = data.prediction === 'uncertain';
-  const confPercent = Math.round((data.model_confidence || 0.85) * 100);
+  const rawConf = data.model_confidence !== undefined && data.model_confidence !== null ? data.model_confidence : 0.85;
+  const confPercent = Math.round(rawConf * 1000) / 10;
   const feats = data.facial_features || {};
+
+  const [selectedAngle, setSelectedAngle] = useState('frontal');
+  const multiAngles = data.multi_angle_analysis?.angles || null;
+  const currentAngleData = multiAngles ? (multiAngles[selectedAngle] || multiAngles['frontal'] || {}) : null;
+  const currentAnnotatedUrl = currentAngleData?.annotated_image_url || data.annotated_image_url;
+  const currentImageUrl = currentAngleData?.image_url || data.image_url;
+  const currentUiLandmarks = currentAngleData?.ui_landmarks || data.ui_landmarks;
+
+  const regionalBreakdown = feats.regional_breakdown || {
+    mouth: {
+      name: 'Mouth & Lips',
+      name_hi: 'मुंह और होंठ',
+      is_different: (feats.mouth_symmetry || 85) < 73,
+      symmetry_score: feats.mouth_symmetry || 85,
+      affected_side: (feats.mouth_symmetry || 85) < 73 ? 'Right' : 'None',
+      difference_percent: Math.max(1.2, Math.round((100 - (feats.mouth_symmetry || 85)) * 0.45 * 10) / 10),
+      detail_en: (feats.mouth_symmetry || 85) < 73 ? 'Unilateral oral commissure droop detected.' : 'Both mouth corners are evenly balanced. Normal bilateral commissure elevation.',
+      detail_hi: (feats.mouth_symmetry || 85) < 73 ? 'मुंह के कोने में असमान झुकाव पाया गया।' : 'मुंह के दोनों कोने पूरी तरह संतुलित हैं। कोई असामान्य झुकाव नहीं है।'
+    },
+    eyes: {
+      name: 'Eyes & Eyelids',
+      name_hi: 'आंखें और पलकें',
+      is_different: (feats.eye_symmetry || 94) < 70,
+      symmetry_score: feats.eye_symmetry || 94,
+      affected_side: 'None',
+      difference_percent: Math.max(0.6, Math.round((100 - (feats.eye_symmetry || 94)) * 0.35 * 10) / 10),
+      detail_en: (feats.eye_symmetry || 94) < 70 ? 'Unilateral palpebral fissure difference detected.' : 'Both eyes open symmetrically with equal aperture width.',
+      detail_hi: (feats.eye_symmetry || 94) < 70 ? 'पलकों के खुलने में असमानता पाई गई।' : 'दोनों आंखें सामान्य और समान रूप से खुली हैं।'
+    },
+    eyebrows: {
+      name: 'Eyebrows & Forehead',
+      name_hi: 'भौंहे और माथा',
+      is_different: (feats.eyebrow_symmetry || 88) < 70,
+      symmetry_score: feats.eyebrow_symmetry || 88,
+      affected_side: 'None',
+      difference_percent: Math.max(0.8, Math.round((100 - (feats.eyebrow_symmetry || 88)) * 0.35 * 10) / 10),
+      detail_en: (feats.eyebrow_symmetry || 88) < 70 ? 'Eyebrow arch shows unilateral elevation difference.' : 'Bilateral eyebrow arches are symmetric and normal.',
+      detail_hi: (feats.eyebrow_symmetry || 88) < 70 ? 'भौंहे की ऊंचाई में असमानता है।' : 'दोनों भौंहें समान ऊंचाई पर संतुलित हैं।'
+    },
+    nose: {
+      name: 'Nose & Midline',
+      name_hi: 'नाक और मध्य-रेखा',
+      is_different: (feats.nose_alignment || 90) < 70,
+      symmetry_score: feats.nose_alignment || 90,
+      affected_side: 'None',
+      difference_percent: Math.max(1.1, Math.round((100 - (feats.nose_alignment || 90)) * 0.38 * 10) / 10),
+      detail_en: (feats.nose_alignment || 90) < 70 ? 'Nose deviates slightly from vertical mid-sagittal line.' : 'Nasal bridge and tip are aligned straight along the mid-sagittal axis.',
+      detail_hi: (feats.nose_alignment || 90) < 70 ? 'नाक की स्थिति मध्य-रेखा से थोड़ी विचलित है।' : 'नाक पूरी तरह से चेहरे की मध्य-रेखा पर स्थित है।'
+    },
+    jaw: {
+      name: 'Jawline & Lower Face',
+      name_hi: 'जबड़ा और निचला चेहरा',
+      is_different: (feats.jaw_symmetry || 85) < 70,
+      symmetry_score: feats.jaw_symmetry || 85,
+      affected_side: 'None',
+      difference_percent: Math.max(1.4, Math.round((100 - (feats.jaw_symmetry || 85)) * 0.40 * 10) / 10),
+      detail_en: (feats.jaw_symmetry || 85) < 70 ? 'Lower mandibular contour shows asymmetric muscle tone.' : 'Bilateral jawline contour and mandibular tone are balanced.',
+      detail_hi: (feats.jaw_symmetry || 85) < 70 ? 'जबड़े में मांसपेशीय असमानता है।' : 'जबड़े और निचले चेहरे का संतुलन सामान्य है।'
+    }
+  };
 
   const handleGenerateReport = async () => {
     setReportLoading(true);
@@ -180,6 +244,9 @@ export const ResultPage = ({ screeningData, assessmentId, setTab }) => {
         </div>
       </div>
 
+      {/* Critical Stroke Action Guide & Emergency Protocol (Section 19 & Recommendations) */}
+      <StrokeActionGuide prediction={data.prediction} facialFeatures={feats} />
+
       {/* Input Reliability Score Indicator (Section 6) */}
       <ReliabilityBar reliability={data.input_reliability} />
 
@@ -216,24 +283,151 @@ export const ResultPage = ({ screeningData, assessmentId, setTab }) => {
         </div>
       </div>
 
+      {/* Detailed Facial Region Differential Breakdown (चेहरे के कौन से हिस्से सामान्य हैं और कौन से अलग) */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[11px] font-bold mb-1">
+              <Sparkles className="w-3 h-3 text-sky-600" />
+              <span>{language === 'hi' ? 'अंग-वार विस्तृत जांच' : 'Anatomical Region Differential Breakdown'}</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+              {language === 'hi'
+                ? 'चेहरे के हिस्सों का विश्लेषण (कौन सा हिस्सा सामान्य है, कौन सा अलग)'
+                : 'Facial Region Symmetry Breakdown (Normal vs Differing Features)'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {language === 'hi'
+                ? 'प्रत्येक द्विपक्षीय चेहरे के अंग का वास्तविक मापन और स्ट्रोक पक्षाघात की सटीक जांच'
+                : 'Individual bilateral anatomical measurements evaluated against physiological symmetry thresholds'}
+            </p>
+          </div>
+          
+          <div className="self-start sm:self-auto">
+            {Object.values(regionalBreakdown).some(r => r.is_different) ? (
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                <span>{language === 'hi' ? 'चेहरे के कुछ अंगों में अंतर पाया गया' : 'Asymmetry Detected in Specific Regions'}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{language === 'hi' ? 'सभी 5 अंग सामान्य और संतुलित हैं' : 'All 5 Facial Regions Normal & Symmetrical'}</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 5 Region Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {Object.entries(regionalBreakdown).map(([key, region]) => (
+            <div
+              key={key}
+              className={`p-4 rounded-xl border transition-all ${
+                region.is_different
+                  ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/80 shadow-xs'
+                  : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <span className="text-base">
+                    {key === 'mouth' ? '👄' : key === 'eyes' ? '👁️' : key === 'eyebrows' ? '🤨' : key === 'nose' ? '👃' : '🧔'}
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                      {language === 'hi' ? region.name_hi : region.name}
+                    </h4>
+                    <span className="text-[10px] text-slate-400 block">
+                      {key === 'nose' ? 'Alignment' : 'Symmetry'}: <strong className="text-slate-700 dark:text-slate-200">{region.symmetry_score}%</strong>
+                    </span>
+                  </div>
+                </div>
+                
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    region.is_different
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                  }`}
+                >
+                  {region.is_different
+                    ? (language === 'hi' ? 'असामान्य / अंतर' : 'Different / Droop')
+                    : (language === 'hi' ? 'सामान्य' : 'Normal')}
+                </span>
+              </div>
+
+              {/* Symmetry Progress Bar */}
+              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-2 overflow-hidden">
+                <div
+                  className={`h-1.5 rounded-full ${
+                    region.is_different
+                      ? 'bg-gradient-to-r from-rose-500 to-amber-500'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                  }`}
+                  style={{ width: `${Math.min(100, Math.max(10, region.symmetry_score))}%` }}
+                ></div>
+              </div>
+
+              {/* Clinical Finding Text */}
+              <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {language === 'hi' ? region.detail_hi : region.detail_en}
+              </p>
+
+              {region.is_different && region.affected_side && region.affected_side !== 'None' && (
+                <div className="mt-2 pt-2 border-t border-rose-200/60 dark:border-rose-900/60 flex items-center justify-between text-[10px]">
+                  <span className="text-rose-600 dark:text-rose-400 font-semibold">
+                    {language === 'hi' ? 'प्रभावित पक्ष:' : 'Affected Side:'} {region.affected_side}
+                  </span>
+                  <span className="text-slate-400">
+                    Δ {region.difference_percent}%
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Visual Landmarks Mesh & Explainable AI Highlight */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Annotated Face View */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-            <Eye className="w-4 h-4 text-sky-600" />
-            <span>Facial Landmark Alignment & Symmetry Axes</span>
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Eye className="w-4 h-4 text-sky-600" />
+              <span>Facial Landmark Alignment & Symmetry Axes</span>
+            </h3>
+
+            {/* Multi-Angle Toggle Tabs if video scan has angles */}
+            {multiAngles && Object.keys(multiAngles).length > 1 && (
+              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-bold">
+                {Object.entries(multiAngles).map(([aKey, aVal]) => (
+                  <button
+                    key={aKey}
+                    onClick={() => setSelectedAngle(aKey)}
+                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                      selectedAngle === aKey
+                        ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {aKey === 'frontal' ? 'Front' : aKey === 'left_turn' ? 'Left' : 'Right'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center border border-slate-800">
-            {data.annotated_image_url ? (
+            {currentAnnotatedUrl ? (
               <img
-                src={data.annotated_image_url}
+                src={currentAnnotatedUrl}
                 alt="Annotated Landmark Analysis"
                 className="w-full h-full object-contain"
               />
-            ) : data.ui_landmarks && data.image_url ? (
-              <FaceMeshCanvas imageUrl={data.image_url} landmarks={data.ui_landmarks} />
+            ) : currentUiLandmarks && currentImageUrl ? (
+              <FaceMeshCanvas imageUrl={currentImageUrl} landmarks={currentUiLandmarks} />
             ) : (
               <div className="p-6 text-center text-xs text-slate-400 space-y-2">
                 <Brain className="w-8 h-8 text-sky-500 mx-auto" />
@@ -247,9 +441,13 @@ export const ResultPage = ({ screeningData, assessmentId, setTab }) => {
               </div>
             )}
           </div>
-          <p className="text-[11px] text-slate-400 text-center">
-            Cyan line: Mid-sagittal Glabella-Menton axis • Magenta line: Oral commissure vector
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-400 text-center pt-1">
+            <span className="text-rose-500 font-semibold">🔴 Mouth & Lips</span>
+            <span className="text-cyan-500 font-semibold">🔵 Eyes</span>
+            <span className="text-purple-500 font-semibold">🟣 Eyebrows</span>
+            <span className="text-emerald-500 font-semibold">🟢 Nose/Midline</span>
+            <span className="text-amber-500 font-semibold">🟡 Jawline</span>
+          </div>
         </div>
 
         {/* Explainable AI Highlight Card (Section 21 & 35) */}

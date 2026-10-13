@@ -87,25 +87,44 @@ def extract_distance_invariant_features(landmarks: List[Dict[str, float]]) -> Di
     iod = np.linalg.norm(pts[L_EYE_OUTER, :2] - pts[R_EYE_OUTER, :2])
     scale = 1.0 / max(iod, 1e-6)
     
-    # 2. Mid-Sagittal Reference Axis (from Glabella 9 to Menton 152)
+    # 2. Anatomical Head Roll & Tilt Angle Estimation
+    # Skull base anatomy: the inter-pupillary / inter-ocular line is invariant to facial paresis.
+    # When head is bent or tilted, this vector gives the true physical roll angle.
+    eye_vector = pts[R_EYE_OUTER, :2] - pts[L_EYE_OUTER, :2]
+    eye_roll_angle = np.arctan2(eye_vector[1], eye_vector[0])
+
+    # Mid-sagittal line (Glabella 9 to Menton 152) for secondary reference
     mid_vector = pts[MENTON, :2] - pts[GLABELLA, :2]
-    mid_angle = np.arctan2(mid_vector[1], mid_vector[0]) - (np.pi / 2.0)
-    
-    # Rotation matrix to align mid-sagittal line vertically
-    cos_a, sin_a = np.cos(-mid_angle), np.sin(-mid_angle)
+    glabella_angle = np.arctan2(mid_vector[1], mid_vector[0]) - (np.pi / 2.0)
+
+    # Use eye-line as dominant orientation anchor (85%) with Glabella alignment to withstand severe head tilt
+    effective_tilt_angle = eye_roll_angle if abs(eye_roll_angle) > 0.05 else (0.8 * eye_roll_angle + 0.2 * glabella_angle)
+
+    # Rotation matrix to align face perfectly upright (level eyes horizontally and mid-line vertically)
+    cos_a, sin_a = np.cos(-effective_tilt_angle), np.sin(-effective_tilt_angle)
     R = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
     
-    # Center origin at midpoint of Glabella and Menton
-    mid_origin = (pts[GLABELLA, :2] + pts[MENTON, :2]) / 2.0
-    pts_rot = np.dot(pts[:, :2] - mid_origin, R.T) * scale
+    # Center origin at midpoint of eyes for roll rotation
+    eye_midpoint = (pts[L_EYE_OUTER, :2] + pts[R_EYE_OUTER, :2]) / 2.0
+    pts_rot = np.dot(pts[:, :2] - eye_midpoint, R.T) * scale
+
+    # Estimated Yaw (horizontal head turn)
+    # Nose tip displacement from vertical midline in rotated coordinates
+    yaw_factor = float(pts_rot[NOSE_TIP, 0])
+    yaw_correction_left = 1.0 + np.clip(yaw_factor * 0.45, -0.3, 0.3)
+    yaw_correction_right = 1.0 - np.clip(yaw_factor * 0.45, -0.3, 0.3)
     
     # 3. Regional Asymmetry Calculations
     
-    # A. Mouth / Lip Corner Asymmetry
+    # A. Mouth / Lip Corner Asymmetry (measured in roll-corrected upright coordinates)
     mouth_l = pts_rot[L_MOUTH_CORNER]
     mouth_r = pts_rot[R_MOUTH_CORNER]
+    # In upright frame, any Y difference between mouth corners is true clinical droop
     mouth_vert_asym = abs(mouth_l[1] - mouth_r[1])
-    mouth_lateral_asym = abs(abs(mouth_l[0]) - abs(mouth_r[0]))
+    # Compensate lateral coordinate for head yaw turn
+    l_lat = abs(mouth_l[0]) * yaw_correction_left
+    r_lat = abs(mouth_r[0]) * yaw_correction_right
+    mouth_lateral_asym = abs(l_lat - r_lat)
     mouth_asym_metric = float(mouth_vert_asym * 1.5 + mouth_lateral_asym * 0.5)
     
     # B. Eye Opening Asymmetry
@@ -119,18 +138,21 @@ def extract_distance_invariant_features(landmarks: List[Dict[str, float]]) -> Di
     eyebrow_asym = float(abs(l_brow_elev - r_brow_elev))
     
     # D. Nose Alignment Deviation
-    # Lateral displacement of nose tip (1) and bridge (168) from mid-sagittal x=0
     nose_dev = float((abs(pts_rot[NOSE_TIP, 0]) + abs(pts_rot[NOSE_BRIDGE, 0])) / 2.0)
     
-    # E. Lower Face / Jawline Asymmetry
+    # E. Lower Face / Jawline Asymmetry (Yaw-compensated)
     jaw_pairs = [(234, 454), (93, 323), (132, 361), (58, 288), (172, 397)]
-    jaw_deltas = [abs(abs(pts_rot[lp, 0]) - abs(pts_rot[rp, 0])) + abs(pts_rot[lp, 1] - pts_rot[rp, 1]) for lp, rp in jaw_pairs]
+    jaw_deltas = [
+        abs(abs(pts_rot[lp, 0]) * yaw_correction_left - abs(pts_rot[rp, 0]) * yaw_correction_right) +
+        abs(pts_rot[lp, 1] - pts_rot[rp, 1])
+        for lp, rp in jaw_pairs
+    ]
     lower_face_asym = float(np.mean(jaw_deltas))
     
     # F. Landmark Displacement Across all Bilateral Pairs
     pair_diffs = []
     for lp, rp in BILATERAL_PAIRS:
-        diff_x = abs(abs(pts_rot[lp, 0]) - abs(pts_rot[rp, 0]))
+        diff_x = abs(abs(pts_rot[lp, 0]) * yaw_correction_left - abs(pts_rot[rp, 0]) * yaw_correction_right)
         diff_y = abs(pts_rot[lp, 1] - pts_rot[rp, 1])
         pair_diffs.append(np.sqrt(diff_x**2 + diff_y**2))
     landmark_displacement_mean = float(np.mean(pair_diffs))
@@ -196,6 +218,143 @@ def extract_distance_invariant_features(landmarks: List[Dict[str, float]]) -> Di
         for idx in key_indices if idx < len(landmarks)
     ]
 
+    # Regional Differential Breakdown (चेहरे के कौन से हिस्से सामान्य हैं और कौन से अलग)
+    # Mouth analysis
+    mouth_diff_pct = round(float(mouth_vert_asym * 120.0), 1)
+    mouth_is_diff = bool(mouth_vert_asym >= 0.048 or mouth_symmetry_score < 72.0)
+    mouth_droop_side = "Right" if mouth_r[1] > mouth_l[1] else "Left" if mouth_l[1] > mouth_r[1] else "None"
+    mouth_detail_en = (
+        f"{mouth_droop_side} mouth corner is noticeably drooping by {mouth_diff_pct}% (significant asymmetry)."
+        if mouth_is_diff else
+        "Both mouth corners are evenly balanced. Normal bilateral commissure elevation."
+    )
+    mouth_detail_hi = (
+        f"मुंह का { 'दायां (Right)' if mouth_droop_side == 'Right' else 'बायां (Left)' } कोना {mouth_diff_pct}% नीचे झुका हुआ है (असामान्य)।"
+        if mouth_is_diff else
+        "मुंह के दोनों कोने पूरी तरह संतुलित हैं। कोई असामान्य झुकाव नहीं है।"
+    )
+
+    # Eye analysis
+    eye_diff_pct = round(float(eye_opening_asym * 180.0), 1)
+    eye_is_diff = bool(eye_opening_asym >= 0.038 or eye_symmetry_score < 70.0)
+    eye_affected_side = "Right" if r_eye_height < l_eye_height else "Left" if l_eye_height < r_eye_height else "None"
+    eye_detail_en = (
+        f"{eye_affected_side} eye shows narrower aperture / eyelid ptosis ({eye_diff_pct}% difference)."
+        if eye_is_diff else
+        "Both eyes have equal palpebral aperture width. Normal bilateral opening."
+    )
+    eye_detail_hi = (
+        f"{ 'दाहिनी (Right)' if eye_affected_side == 'Right' else 'बाईं (Left)' } आंख की पलक में {eye_diff_pct}% का अंतर पाया गया।"
+        if eye_is_diff else
+        "दोनों आंखें सामान्य और समान रूप से खुली हैं।"
+    )
+
+    # Eyebrow analysis
+    brow_diff_pct = round(float(eyebrow_asym * 160.0), 1)
+    brow_is_diff = bool(eyebrow_asym >= 0.040 or eyebrow_symmetry_score < 70.0)
+    brow_affected_side = "Right" if r_brow_elev < l_brow_elev else "Left" if l_brow_elev < r_brow_elev else "None"
+    brow_detail_en = (
+        f"{brow_affected_side} eyebrow shows reduced elevation ({brow_diff_pct}% difference)."
+        if brow_is_diff else
+        "Bilateral eyebrow arch elevation is symmetric and normal."
+    )
+    brow_detail_hi = (
+        f"{ 'दाहिनी (Right)' if brow_affected_side == 'Right' else 'बाईं (Left)' } भौंह में {brow_diff_pct}% असमानता है।"
+        if brow_is_diff else
+        "दोनों भौंहें समान ऊंचाई पर संतुलित हैं।"
+    )
+
+    # Nose alignment
+    nose_diff_pct = round(float(nose_dev * 150.0), 1)
+    nose_is_diff = bool(nose_dev >= 0.06 or nose_alignment_score < 70.0)
+    nose_detail_en = (
+        f"Nasal bridge deviates laterally from vertical midline by {nose_diff_pct}%."
+        if nose_is_diff else
+        "Nose is straight along the mid-sagittal facial axis."
+    )
+    nose_detail_hi = (
+        f"नाक की स्थिति मध्य रेखा से {nose_diff_pct}% विचलित है।"
+        if nose_is_diff else
+        "नाक पूरी तरह से चेहरे की मध्य-रेखा पर स्थित है।"
+    )
+
+    # Jawline analysis
+    jaw_diff_pct = round(float(lower_face_asym * 140.0), 1)
+    jaw_is_diff = bool(lower_face_asym >= 0.06 or lower_face_score < 70.0)
+    jaw_detail_en = (
+        f"Lower jawline shows unilateral muscular contour shift ({jaw_diff_pct}% difference)."
+        if jaw_is_diff else
+        "Bilateral jawline contour and mandibular tone are balanced."
+    )
+    jaw_detail_hi = (
+        f"निचले जबड़े में {jaw_diff_pct}% की असमानता पाई गई।"
+        if jaw_is_diff else
+        "जबड़े और निचले चेहरे का संतुलन सामान्य है।"
+    )
+
+    regional_breakdown = {
+        "mouth": {
+            "name": "Mouth & Lips",
+            "name_hi": "मुंह और होंठ",
+            "is_different": mouth_is_diff,
+            "status": "ASYMMETRIC" if mouth_is_diff else "NORMAL",
+            "status_label": "Different / Drooping (असामान्य)" if mouth_is_diff else "Normal (सामान्य)",
+            "symmetry_score": round(mouth_symmetry_score, 1),
+            "affected_side": mouth_droop_side,
+            "difference_percent": mouth_diff_pct,
+            "detail_en": mouth_detail_en,
+            "detail_hi": mouth_detail_hi
+        },
+        "eyes": {
+            "name": "Eyes & Eyelids",
+            "name_hi": "आंखें और पलकें",
+            "is_different": eye_is_diff,
+            "status": "ASYMMETRIC" if eye_is_diff else "NORMAL",
+            "status_label": "Different / Ptosis (असामान्य)" if eye_is_diff else "Normal (सामान्य)",
+            "symmetry_score": round(eye_symmetry_score, 1),
+            "affected_side": eye_affected_side,
+            "difference_percent": eye_diff_pct,
+            "detail_en": eye_detail_en,
+            "detail_hi": eye_detail_hi
+        },
+        "eyebrows": {
+            "name": "Eyebrows & Forehead",
+            "name_hi": "भौंहे और माथा",
+            "is_different": brow_is_diff,
+            "status": "ASYMMETRIC" if brow_is_diff else "NORMAL",
+            "status_label": "Different / Uneven (असामान्य)" if brow_is_diff else "Normal (सामान्य)",
+            "symmetry_score": round(eyebrow_symmetry_score, 1),
+            "affected_side": brow_affected_side,
+            "difference_percent": brow_diff_pct,
+            "detail_en": brow_detail_en,
+            "detail_hi": brow_detail_hi
+        },
+        "nose": {
+            "name": "Nose & Midline",
+            "name_hi": "नाक और मध्य-रेखा",
+            "is_different": nose_is_diff,
+            "status": "DEVIATED" if nose_is_diff else "CENTERED",
+            "status_label": "Deviated (विचलित)" if nose_is_diff else "Normal / Centered (सामान्य)",
+            "symmetry_score": round(nose_alignment_score, 1),
+            "affected_side": "None",
+            "difference_percent": nose_diff_pct,
+            "detail_en": nose_detail_en,
+            "detail_hi": nose_detail_hi
+        },
+        "jaw": {
+            "name": "Jawline & Lower Face",
+            "name_hi": "जबड़ा और निचला चेहरा",
+            "is_different": jaw_is_diff,
+            "status": "ASYMMETRIC" if jaw_is_diff else "NORMAL",
+            "status_label": "Different (असामान्य)" if jaw_is_diff else "Normal (सामान्य)",
+            "symmetry_score": round(lower_face_score, 1),
+            "affected_side": "None",
+            "difference_percent": jaw_diff_pct,
+            "detail_en": jaw_detail_en,
+            "detail_hi": jaw_detail_hi
+        }
+    }
+
     return {
         # Section 31 required structure keys:
         "facial_symmetry": round(facial_symmetry_score, 1),
@@ -213,7 +372,12 @@ def extract_distance_invariant_features(landmarks: List[Dict[str, float]]) -> Di
         "lower_face_asymmetry": round(lower_face_asym, 3),
         "landmark_displacement_mean": round(landmark_displacement_mean, 3),
         "nose_deviation": round(nose_dev, 4),
+        "head_pose": {
+            "roll_degrees": round(float(np.degrees(effective_tilt_angle)), 1),
+            "yaw_degrees": round(float(yaw_factor * 45.0), 1)
+        },
         "feature_vector": feature_vector,
         "feature_names": feature_names,
-        "ui_landmarks": ui_landmarks
+        "ui_landmarks": ui_landmarks,
+        "regional_breakdown": regional_breakdown
     }

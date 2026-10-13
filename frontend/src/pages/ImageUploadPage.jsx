@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import {
   Upload, Image as ImageIcon, CheckCircle2, AlertCircle,
-  ArrowRight, RefreshCw, X, ShieldCheck, ArrowLeft, Layers, Camera, AlertTriangle
+  ArrowRight, RefreshCw, X, ShieldCheck, ArrowLeft, Layers, Camera, AlertTriangle,
+  FileText, File
 } from 'lucide-react';
 import axios from 'axios';
 import { analyzeScreeningImage } from '../services/api';
@@ -13,6 +14,7 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
   // Single image state
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileTypeCategory, setFileTypeCategory] = useState('image'); // 'image' | 'pdf' | 'docx'
 
   // Multi-image state
   const [neutralFile, setNeutralFile] = useState(null);
@@ -36,21 +38,30 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      setError('Unsupported file format. Please upload a valid JPG, JPEG, or PNG image.');
-      return;
+    const fname = file.name.toLowerCase();
+    let cat = 'image';
+    if (fname.endsWith('.pdf') || file.type === 'application/pdf') {
+      cat = 'pdf';
+    } else if (fname.endsWith('.docx') || fname.endsWith('.doc') || file.type.includes('word') || file.type.includes('officedocument')) {
+      cat = 'docx';
     }
 
+    setFileTypeCategory(cat);
     setError('');
     setQualityWarning(null);
     setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+
+    if (cat === 'image') {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
   };
 
   const handleRetakeSingle = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setFileTypeCategory('image');
     setError('');
     setQualityWarning(null);
     if (singleInputRef.current) singleInputRef.current.value = '';
@@ -89,7 +100,10 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
       setTab('result');
     } catch (err) {
       const detail = err.response?.data?.detail;
-      setError(typeof detail === 'string' ? detail : 'An error occurred during facial analysis. Please ensure a clear, unedited front-facing image.');
+      const fallbackMsg = !err.response 
+        ? 'Could not connect to backend server. Please verify the backend is running at http://localhost:8000.' 
+        : (typeof detail === 'string' ? detail : 'An error occurred during facial analysis. Please ensure a clear, unedited front-facing image.');
+      setError(fallbackMsg);
     } finally {
       setLoading(false);
       setProcessingStage('');
@@ -154,7 +168,7 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
               Upload Facial Image
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Supports single front-facing photo or multi-view assessment session. Unedited natural photos required.
+              Supports any facial photo (camera, phone, web, or Google images). Automatic head-pose tilt and bend normalization active.
             </p>
           </div>
 
@@ -203,10 +217,10 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
           </div>
         )}
 
-        {/* SINGLE IMAGE MODE */}
+        {/* SINGLE IMAGE / DOCUMENT MODE */}
         {mode === 'single' ? (
           <div>
-            {!previewUrl ? (
+            {!selectedFile ? (
               <div
                 onClick={() => singleInputRef.current?.click()}
                 className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center hover:border-sky-500 dark:hover:border-sky-400 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/20"
@@ -214,7 +228,7 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
                 <input
                   ref={singleInputRef}
                   type="file"
-                  accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                  accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.tiff,.tif,.avif,.pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
                   onChange={handleSingleFileChange}
                   className="hidden"
                 />
@@ -222,33 +236,76 @@ export const ImageUploadPage = ({ setTab, onScreeningComplete }) => {
                   <Upload className="w-7 h-7" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  Select front-facing natural facial photograph
+                  Select facial photo or document (Any format supported)
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  JPG, JPEG, or PNG (Max 15MB) • Avoid beauty filters or voluntary grimaces
+                  JPG, JPEG, PNG, WEBP, BMP, TIFF, AVIF, PDF, or Word DOCX/DOC • Max 25MB
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">WEBP / PNG / JPG</span>
+                  <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 text-[10px] font-bold">PDF Documents</span>
+                  <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 text-[10px] font-bold">Word DOCX</span>
+                  <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold">BMP / TIFF</span>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="relative max-w-md mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md bg-slate-950 flex items-center justify-center">
-                  <img
-                    src={previewUrl}
-                    alt="Selected Face Preview"
-                    className="max-h-80 w-auto object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRetakeSingle}
-                    title="Remove photo"
-                    className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-slate-900 transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                {fileTypeCategory === 'image' && previewUrl ? (
+                  <div className="relative max-w-md mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md bg-slate-950 flex items-center justify-center">
+                    <img
+                      src={previewUrl}
+                      alt="Selected Face Preview"
+                      className="max-h-80 w-auto object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRetakeSingle}
+                      title="Remove photo"
+                      className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-slate-900 transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-md bg-slate-50 dark:bg-slate-850 flex items-center space-x-4">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm ${
+                      fileTypeCategory === 'pdf' ? 'bg-rose-600' : 'bg-sky-600'
+                    }`}>
+                      <FileText className="w-7 h-7" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                          fileTypeCategory === 'pdf' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+                        }`}>
+                          {fileTypeCategory === 'pdf' ? 'PDF Medical Document' : 'Word Document (.docx)'}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate mt-1">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Automatic face extraction enabled
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRetakeSingle}
+                      title="Remove document"
+                      className="p-1.5 rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
 
                 <div className="p-3 bg-sky-50 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-900 text-xs text-sky-800 dark:text-sky-300 flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 shrink-0 text-sky-600" />
-                  <span>Image ready. The system will perform anti-manipulation checks before extracting 468 MediaPipe landmarks.</span>
+                  <span>
+                    {fileTypeCategory === 'image'
+                      ? 'Image ready. The system will perform anti-manipulation checks before extracting 468 MediaPipe landmarks.'
+                      : 'Document loaded. Clinical photos and facial landmarks will be extracted and analyzed automatically.'}
+                  </span>
                 </div>
               </div>
             )}

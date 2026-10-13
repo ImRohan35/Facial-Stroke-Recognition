@@ -1,0 +1,39 @@
+{
+  "evaluation_timestamp": "2026-10-11T05:34:53.093180+00:00",
+  "model_evaluated": "XGBoost",
+  "dataset_source": "Kaggle Clinical Dataset (Annotated Facial Images for Stroke)",
+  "total_test_samples": 3715,
+  "stroke_samples": 1244,
+  "non_stroke_samples": 2471,
+  "metrics": {
+    "accuracy": 0.9459,
+    "sensitivity_recall": 0.9365,
+    "specificity": 0.9506,
+    "precision": 0.9052,
+    "f1_score": 0.9206,
+    "roc_auc": 0.9869,
+    "false_positive_rate": 0.0494,
+    "false_negative_rate": 0.0635,
+    "brier_score_calibration": 0.0557,
+    "expected_calibration_error_ece": 0.1443
+  },
+  "confusion_matrix": {
+    "true_negatives": 2349,
+    "false_positives": 122,
+    "false_negatives": 79,
+    "true_positives": 1165
+  },
+  "robustness_benchmarks": {
+    "intentional_expression_protection_rate_pct": 100.0,
+    "multi_angle_yaw_consistency_pct": 96.4,
+    "lighting_tolerance_lux_range": "35 - 225 Mean Pixel Luminance",
+    "blur_tolerance_laplacian_min": 35.0
+  },
+  "regulatory_classification": "Experimental Clinical Screening Prototype (Not a Confirmed Diagnostic Device)",
+  "limitations_identified": [
+    "Facial landmark analysis detects motor asymmetry of cranial nerve VII (facial nerve) only.",
+    "Posterior circulation strokes without facial paresis (vertigo, ataxia, isolated diplopia) cannot be detected by facial video alone.",
+    "Pre-existing peripheral facial nerve conditions (Bell's palsy, trauma, prior dental nerve blocks) produce asymmetry not caused by acute stroke.",
+    "Video quality with tracking continuity below 55% is flagged as Inconclusive/Uncertain rather than forced binary classification."
+  ]
+}

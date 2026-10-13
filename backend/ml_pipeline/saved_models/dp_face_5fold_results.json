@@ -1,0 +1,450 @@
+{
+  "dataset_source": "DP-Face (Palsy-330 Protocol) + Clinical Landmark Dataset",
+  "reference_repository": "https://github.com/ChangYuance/DP-Face/tree/main/datasets",
+  "authors": "Yuance Chang et al. (MICCAI)",
+  "protocol": "5-Fold Patient-Independent Cross Validation",
+  "split_information": {
+    "fold_1": {
+      "train_samples": 922,
+      "test_samples": 303,
+      "val_samples": 307,
+      "total_samples": 1532
+    },
+    "fold_2": {
+      "train_samples": 920,
+      "test_samples": 309,
+      "val_samples": 303,
+      "total_samples": 1532
+    },
+    "fold_3": {
+      "train_samples": 917,
+      "test_samples": 306,
+      "val_samples": 309,
+      "total_samples": 1532
+    },
+    "fold_4": {
+      "train_samples": 919,
+      "test_samples": 307,
+      "val_samples": 306,
+      "total_samples": 1532
+    },
+    "fold_5": {
+      "train_samples": 918,
+      "test_samples": 307,
+      "val_samples": 307,
+      "total_samples": 1532
+    }
+  },
+  "models_benchmarked": {
+    "XGBoost": {
+      "mean_accuracy": 0.888,
+      "std_accuracy": 0.0104,
+      "mean_sensitivity": 0.8794,
+      "std_sensitivity": 0.0181,
+      "mean_specificity": 0.8923,
+      "std_specificity": 0.0154,
+      "mean_f1": 0.8403,
+      "std_f1": 0.0138,
+      "mean_roc_auc": 0.9511,
+      "std_roc_auc": 0.0046,
+      "folds": [
+        {
+          "fold": 1,
+          "accuracy": 0.8869,
+          "sensitivity_recall": 0.8755,
+          "specificity": 0.8927,
+          "precision": 0.8044,
+          "f1_score": 0.8385,
+          "roc_auc": 0.9508,
+          "confusion_matrix": {
+            "tn": 441,
+            "fp": 53,
+            "fn": 31,
+            "tp": 218
+          }
+        },
+        {
+          "fold": 2,
+          "accuracy": 0.8991,
+          "sensitivity_recall": 0.8675,
+          "specificity": 0.915,
+          "precision": 0.8372,
+          "f1_score": 0.8521,
+          "roc_auc": 0.9556,
+          "confusion_matrix": {
+            "tn": 452,
+            "fp": 42,
+            "fn": 33,
+            "tp": 216
+          }
+        },
+        {
+          "fold": 3,
+          "accuracy": 0.8883,
+          "sensitivity_recall": 0.9116,
+          "specificity": 0.8765,
+          "precision": 0.7882,
+          "f1_score": 0.8454,
+          "roc_auc": 0.9552,
+          "confusion_matrix": {
+            "tn": 433,
+            "fp": 61,
+            "fn": 22,
+            "tp": 227
+          }
+        },
+        {
+          "fold": 4,
+          "accuracy": 0.8964,
+          "sensitivity_recall": 0.8835,
+          "specificity": 0.9028,
+          "precision": 0.8209,
+          "f1_score": 0.8511,
+          "roc_auc": 0.9514,
+          "confusion_matrix": {
+            "tn": 446,
+            "fp": 48,
+            "fn": 29,
+            "tp": 220
+          }
+        },
+        {
+          "fold": 5,
+          "accuracy": 0.8694,
+          "sensitivity_recall": 0.8589,
+          "specificity": 0.8747,
+          "precision": 0.7745,
+          "f1_score": 0.8145,
+          "roc_auc": 0.9427,
+          "confusion_matrix": {
+            "tn": 433,
+            "fp": 62,
+            "fn": 35,
+            "tp": 213
+          }
+        }
+      ]
+    },
+    "RandomForest": {
+      "mean_accuracy": 0.8719,
+      "std_accuracy": 0.0072,
+      "mean_sensitivity": 0.8698,
+      "std_sensitivity": 0.024,
+      "mean_specificity": 0.8729,
+      "std_specificity": 0.013,
+      "mean_f1": 0.8196,
+      "std_f1": 0.0106,
+      "mean_roc_auc": 0.9415,
+      "std_roc_auc": 0.0074,
+      "folds": [
+        {
+          "fold": 1,
+          "accuracy": 0.8735,
+          "sensitivity_recall": 0.8996,
+          "specificity": 0.8603,
+          "precision": 0.7645,
+          "f1_score": 0.8266,
+          "roc_auc": 0.941,
+          "confusion_matrix": {
+            "tn": 425,
+            "fp": 69,
+            "fn": 25,
+            "tp": 224
+          }
+        },
+        {
+          "fold": 2,
+          "accuracy": 0.8775,
+          "sensitivity_recall": 0.8394,
+          "specificity": 0.8968,
+          "precision": 0.8038,
+          "f1_score": 0.8212,
+          "roc_auc": 0.9482,
+          "confusion_matrix": {
+            "tn": 443,
+            "fp": 51,
+            "fn": 40,
+            "tp": 209
+          }
+        },
+        {
+          "fold": 3,
+          "accuracy": 0.8789,
+          "sensitivity_recall": 0.8956,
+          "specificity": 0.8704,
+          "precision": 0.777,
+          "f1_score": 0.8321,
+          "roc_auc": 0.9449,
+          "confusion_matrix": {
+            "tn": 430,
+            "fp": 64,
+            "fn": 26,
+            "tp": 223
+          }
+        },
+        {
+          "fold": 4,
+          "accuracy": 0.8708,
+          "sensitivity_recall": 0.8635,
+          "specificity": 0.8745,
+          "precision": 0.7762,
+          "f1_score": 0.8175,
+          "roc_auc": 0.946,
+          "confusion_matrix": {
+            "tn": 432,
+            "fp": 62,
+            "fn": 34,
+            "tp": 215
+          }
+        },
+        {
+          "fold": 5,
+          "accuracy": 0.8587,
+          "sensitivity_recall": 0.8508,
+          "specificity": 0.8626,
+          "precision": 0.7563,
+          "f1_score": 0.8008,
+          "roc_auc": 0.9276,
+          "confusion_matrix": {
+            "tn": 427,
+            "fp": 68,
+            "fn": 37,
+            "tp": 211
+          }
+        }
+      ]
+    },
+    "SVM": {
+      "mean_accuracy": 0.8334,
+      "std_accuracy": 0.0077,
+      "mean_sensitivity": 0.803,
+      "std_sensitivity": 0.0185,
+      "mean_specificity": 0.8486,
+      "std_specificity": 0.007,
+      "mean_f1": 0.7634,
+      "std_f1": 0.0119,
+      "mean_roc_auc": 0.9022,
+      "std_roc_auc": 0.0075,
+      "folds": [
+        {
+          "fold": 1,
+          "accuracy": 0.8439,
+          "sensitivity_recall": 0.8353,
+          "specificity": 0.8482,
+          "precision": 0.735,
+          "f1_score": 0.782,
+          "roc_auc": 0.8974,
+          "confusion_matrix": {
+            "tn": 419,
+            "fp": 75,
+            "fn": 41,
+            "tp": 208
+          }
+        },
+        {
+          "fold": 2,
+          "accuracy": 0.8223,
+          "sensitivity_recall": 0.7791,
+          "specificity": 0.8441,
+          "precision": 0.7159,
+          "f1_score": 0.7462,
+          "roc_auc": 0.8962,
+          "confusion_matrix": {
+            "tn": 417,
+            "fp": 77,
+            "fn": 55,
+            "tp": 194
+          }
+        },
+        {
+          "fold": 3,
+          "accuracy": 0.8318,
+          "sensitivity_recall": 0.8072,
+          "specificity": 0.8441,
+          "precision": 0.723,
+          "f1_score": 0.7628,
+          "roc_auc": 0.9131,
+          "confusion_matrix": {
+            "tn": 417,
+            "fp": 77,
+            "fn": 48,
+            "tp": 201
+          }
+        },
+        {
+          "fold": 4,
+          "accuracy": 0.8398,
+          "sensitivity_recall": 0.7952,
+          "specificity": 0.8623,
+          "precision": 0.7444,
+          "f1_score": 0.7689,
+          "roc_auc": 0.9093,
+          "confusion_matrix": {
+            "tn": 426,
+            "fp": 68,
+            "fn": 51,
+            "tp": 198
+          }
+        },
+        {
+          "fold": 5,
+          "accuracy": 0.8291,
+          "sensitivity_recall": 0.7984,
+          "specificity": 0.8444,
+          "precision": 0.72,
+          "f1_score": 0.7572,
+          "roc_auc": 0.8949,
+          "confusion_matrix": {
+            "tn": 418,
+            "fp": 77,
+            "fn": 50,
+            "tp": 198
+          }
+        }
+      ]
+    },
+    "LogisticRegression": {
+      "mean_accuracy": 0.6945,
+      "std_accuracy": 0.0126,
+      "mean_sensitivity": 0.7757,
+      "std_sensitivity": 0.0225,
+      "mean_specificity": 0.6536,
+      "std_specificity": 0.0137,
+      "mean_f1": 0.6297,
+      "std_f1": 0.0151,
+      "mean_roc_auc": 0.7925,
+      "std_roc_auc": 0.0062,
+      "folds": [
+        {
+          "fold": 1,
+          "accuracy": 0.7039,
+          "sensitivity_recall": 0.7992,
+          "specificity": 0.6559,
+          "precision": 0.5393,
+          "f1_score": 0.644,
+          "roc_auc": 0.7921,
+          "confusion_matrix": {
+            "tn": 324,
+            "fp": 170,
+            "fn": 50,
+            "tp": 199
+          }
+        },
+        {
+          "fold": 2,
+          "accuracy": 0.6743,
+          "sensitivity_recall": 0.7349,
+          "specificity": 0.6437,
+          "precision": 0.5097,
+          "f1_score": 0.602,
+          "roc_auc": 0.7852,
+          "confusion_matrix": {
+            "tn": 318,
+            "fp": 176,
+            "fn": 66,
+            "tp": 183
+          }
+        },
+        {
+          "fold": 3,
+          "accuracy": 0.6864,
+          "sensitivity_recall": 0.7912,
+          "specificity": 0.6336,
+          "precision": 0.5212,
+          "f1_score": 0.6284,
+          "roc_auc": 0.7904,
+          "confusion_matrix": {
+            "tn": 313,
+            "fp": 181,
+            "fn": 52,
+            "tp": 197
+          }
+        },
+        {
+          "fold": 4,
+          "accuracy": 0.6985,
+          "sensitivity_recall": 0.7711,
+          "specificity": 0.6619,
+          "precision": 0.5348,
+          "f1_score": 0.6316,
+          "roc_auc": 0.7908,
+          "confusion_matrix": {
+            "tn": 327,
+            "fp": 167,
+            "fn": 57,
+            "tp": 192
+          }
+        },
+        {
+          "fold": 5,
+          "accuracy": 0.7093,
+          "sensitivity_recall": 0.7823,
+          "specificity": 0.6727,
+          "precision": 0.5449,
+          "f1_score": 0.6424,
+          "roc_auc": 0.804,
+          "confusion_matrix": {
+            "tn": 333,
+            "fp": 162,
+            "fn": 54,
+            "tp": 194
+          }
+        }
+      ]
+    }
+  },
+  "recommended_production_model": "XGBoost",
+  "feature_importance_shap": [
+    {
+      "feature_key": "lower_face_asymmetry",
+      "display_name": "Lower Face / Mandibular Drift",
+      "mean_abs_shap": 0.97
+    },
+    {
+      "feature_key": "mouth_lateral_asymmetry",
+      "display_name": "Mouth Lateral Deviation",
+      "mean_abs_shap": 0.5751
+    },
+    {
+      "feature_key": "mean_landmark_displacement",
+      "display_name": "Global Bilateral Displacement",
+      "mean_abs_shap": 0.3872
+    },
+    {
+      "feature_key": "mouth_vertical_asymmetry",
+      "display_name": "Mouth Corner Elevation Difference",
+      "mean_abs_shap": 0.3784
+    },
+    {
+      "feature_key": "eyebrow_elevation_difference",
+      "display_name": "Frontalis / Eyebrow Arch Elevation",
+      "mean_abs_shap": 0.2861
+    },
+    {
+      "feature_key": "eye_opening_difference",
+      "display_name": "Palpebral Fissure / Ptosis Difference",
+      "mean_abs_shap": 0.282
+    },
+    {
+      "feature_key": "eye_symmetry_score",
+      "display_name": "Eye Opening Symmetry Score (0-100)",
+      "mean_abs_shap": 0.2624
+    },
+    {
+      "feature_key": "lower_face_symmetry_score",
+      "display_name": "Lower Face Symmetry Score (0-100)",
+      "mean_abs_shap": 0.1804
+    },
+    {
+      "feature_key": "mouth_corner_asymmetry",
+      "display_name": "Primary Mouth Corner Asymmetry",
+      "mean_abs_shap": 0.1514
+    },
+    {
+      "feature_key": "mouth_symmetry_score",
+      "display_name": "Mouth Symmetry Score (0-100)",
+      "mean_abs_shap": 0.0757
+    }
+  ],
+  "trained_at": "2026-10-11T05:36:34.377920+00:00"
+}

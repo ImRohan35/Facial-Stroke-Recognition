@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Lock, Mail, ArrowRight, User, Stethoscope, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Brain, Lock, Mail, ArrowRight, User, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
@@ -16,14 +16,8 @@ export const LoginPage = ({ setTab }) => {
     setError('');
     setLoading(true);
     try {
-      const user = await loginUser(email, password);
-      if (user.role === 'DOCTOR') {
-        setTab('doctor');
-      } else if (user.role === 'ADMIN') {
-        setTab('admin');
-      } else {
-        setTab('dashboard');
-      }
+      await loginUser(email, password);
+      setTab('dashboard');
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password. Please verify credentials.');
     } finally {
@@ -31,14 +25,12 @@ export const LoginPage = ({ setTab }) => {
     }
   };
 
-  const handleDemoLogin = async (role) => {
+  const handleDemoLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      const user = await switchDemoRole(role);
-      if (role === 'DOCTOR') setTab('doctor');
-      else if (role === 'ADMIN') setTab('admin');
-      else setTab('dashboard');
+      await switchDemoRole('PATIENT');
+      setTab('dashboard');
     } catch (err) {
       setError('Could not connect to backend server. Make sure API is running on port 8000.');
     } finally {
@@ -65,7 +57,7 @@ export const LoginPage = ({ setTab }) => {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white mx-auto shadow-sm shadow-sky-500/30">
                 <Brain className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white pt-2">Sign in to Platform</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white pt-2">Sign In</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">Access facial screening, baseline tracking & reports</p>
             </div>
 
@@ -120,39 +112,19 @@ export const LoginPage = ({ setTab }) => {
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800" /></div>
               <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 bg-white dark:bg-slate-900 px-2">
-                Or One-Click Demo Access
+                Quick Demo Access
               </div>
             </div>
 
-            {/* Quick Demo Fill Buttons */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('PATIENT')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-950 border border-slate-200 dark:border-slate-700 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                <User className="w-4 h-4 mx-auto mb-1 text-sky-600" />
-                <span className="block text-[11px]">Patient</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('DOCTOR')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-950 border border-slate-200 dark:border-slate-700 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                <Stethoscope className="w-4 h-4 mx-auto mb-1 text-teal-600" />
-                <span className="block text-[11px]">Doctor</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('ADMIN')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 border border-slate-200 dark:border-slate-700 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                <Shield className="w-4 h-4 mx-auto mb-1 text-purple-600" />
-                <span className="block text-[11px]">Admin</span>
-              </button>
-            </div>
+            {/* Quick Demo Fill Button */}
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-950 border border-slate-200 dark:border-slate-700 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-sky-600" />
+              <span>One-Click Instant Demo Login</span>
+            </button>
 
             <div className="text-center pt-2">
               <span className="text-xs text-slate-500">Don't have an account? </span>
